@@ -1,60 +1,65 @@
-# Terraform Module for GCS Bucket
+# Terraform Module for Google Cloud SQL Database Instance
 
-![Release](https://github.com/subhamay-bhattacharyya-tf/terraform-google-module-template/actions/workflows/ci.yaml/badge.svg)&nbsp;![GCP](https://img.shields.io/badge/GCP-4285F4?logo=googlecloud&logoColor=white)&nbsp;![Commit Activity](https://img.shields.io/github/commit-activity/t/subhamay-bhattacharyya-tf/terraform-google-module-template)&nbsp;![Last Commit](https://img.shields.io/github/last-commit/subhamay-bhattacharyya-tf/terraform-google-module-template)&nbsp;![Release Date](https://img.shields.io/github/release-date/subhamay-bhattacharyya-tf/terraform-google-module-template)&nbsp;![Repo Size](https://img.shields.io/github/repo-size/subhamay-bhattacharyya-tf/terraform-google-module-template)&nbsp;![File Count](https://img.shields.io/github/directory-file-count/subhamay-bhattacharyya-tf/terraform-google-module-template)&nbsp;![Issues](https://img.shields.io/github/issues/subhamay-bhattacharyya-tf/terraform-google-module-template)&nbsp;![Top Language](https://img.shields.io/github/languages/top/subhamay-bhattacharyya-tf/terraform-google-module-template)&nbsp;![Built with Claude Code](https://img.shields.io/badge/Built%20with-Claude%20Code-623CE4?logo=anthropic&logoColor=white)&nbsp;![Custom Endpoint](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/bsubhamay/476e6e7583432e960e6de16d5223e6a3/raw/terraform-google-module-template.json?)
+![Release](https://github.com/subhamay-bhattacharyya-tf/terraform-google-cloud-sql-instance/actions/workflows/ci.yaml/badge.svg)&nbsp;![GCP](https://img.shields.io/badge/GCP-4285F4?logo=googlecloud&logoColor=white)&nbsp;![Commit Activity](https://img.shields.io/github/commit-activity/t/subhamay-bhattacharyya-tf/terraform-google-cloud-sql-instance)&nbsp;![Last Commit](https://img.shields.io/github/last-commit/subhamay-bhattacharyya-tf/terraform-google-cloud-sql-instance)&nbsp;![Release Date](https://img.shields.io/github/release-date/subhamay-bhattacharyya-tf/terraform-google-cloud-sql-instance)&nbsp;![Repo Size](https://img.shields.io/github/repo-size/subhamay-bhattacharyya-tf/terraform-google-cloud-sql-instance)&nbsp;![File Count](https://img.shields.io/github/directory-file-count/subhamay-bhattacharyya-tf/terraform-google-cloud-sql-instance)&nbsp;![Issues](https://img.shields.io/github/issues/subhamay-bhattacharyya-tf/terraform-google-cloud-sql-instance)&nbsp;![Top Language](https://img.shields.io/github/languages/top/subhamay-bhattacharyya-tf/terraform-google-cloud-sql-instance)&nbsp;![Built with Claude Code](https://img.shields.io/badge/Built%20with-Claude%20Code-623CE4?logo=anthropic&logoColor=white)&nbsp;![Custom Endpoint](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/bsubhamay/476e6e7583432e960e6de16d5223e6a3/raw/terraform-google-cloud-sql-instance.json?&cacheSeconds=0)
 
-A Terraform module for creating and managing a **Google Cloud Storage (GCS) bucket** on GCP.
+A Terraform module for creating and managing a **Google Cloud SQL Database Instance** on GCP.
 
 ## Overview
 
-This module provisions a single `google_storage_bucket` resource via the `terraform-google-module-template` module. It accepts a small set of flat input variables and assembles the required `gcs_config` object, enforcing `uniform_bucket_level_access = true` and `public_access_prevention = "enforced"` by default.
+This module provisions a single `google_sql_database_instance` resource. It accepts a single structured `cloud_sql_database_instance_config` object variable and exposes standard instance attributes as outputs.
 
 ## Requirements
 
 | Requirement | Version |
-|---|---|
+| --- | --- |
 | Terraform | >= 1.3.0 |
 | Google Provider | >= 7.23.0 |
 
 ## Usage
 
 ```hcl
-module "gcs_bucket" {
-  source = "github.com/subhamay-bhattacharyya-tf/terraform-google-module-template"
+module "cloud_sql_database_instance" {
+  source = "github.com/subhamay-bhattacharyya-tf/terraform-google-cloud-sql-instance"
 
-  bucket_name = "my-portfolio-bucket"
-  project_id  = "portfolio-site"
-  location    = "US"
-  environment = "prod"
+  environment  = "prod"
+  project_code = "demo"
+  region       = "us-central1"
+
+  cloud_sql_database_instance_config = {
+    base_name = "my-sql-instance"
+    location  = "us-central1"
+  }
 }
 ```
 
 ## Input Variables
 
 | Name | Description | Type | Default | Required |
-|---|---|---|---|---|
-| `bucket_name` | Name of the GCS bucket | `string` | — | yes |
-| `project_id` | GCP project ID | `string` | `"portfolio-site"` | no |
+| --- | --- | --- | --- | --- |
+| `environment` | Deployment environment | `string` | — | yes |
+| `project_code` | Short identifier for naming standardization | `string` | — | yes |
 | `region` | GCP region | `string` | `"us-central1"` | no |
-| `location` | GCS bucket location | `string` | `"US"` | no |
-| `storage_class` | Storage class | `string` | `"STANDARD"` | no |
-| `force_destroy` | Force-destroy bucket on destroy | `bool` | `false` | no |
-| `versioning` | Enable object versioning | `bool` | `false` | no |
-| `labels` | Additional labels | `map(string)` | `{}` | no |
-| `project` | Project label value | `string` | `"portfolio-site"` | no |
-| `environment` | Environment label value | `string` | `"dev"` | no |
+| `cloud_sql_database_instance_config` | Configuration object for the Cloud SQL database instance | `object` | — | yes |
+
+### `cloud_sql_database_instance_config` Attributes
+
+| Attribute | Type | Required | Default | Notes |
+| --- | --- | --- | --- | --- |
+| `base_name` | `string` | yes | — | Alphanumeric or dashes, max length ≤ 30 |
+| `location` | `string` | no | `"us-central1"` | Region where the instance is created |
 
 ## Outputs
 
 | Name | Description |
-|---|---|
-| `bucket_id` | The ID of the GCS bucket |
-| `bucket_name` | The name of the GCS bucket |
-| `bucket_project` | The project ID where the bucket is created |
-| `bucket_location` | The location of the GCS bucket |
-| `bucket_url` | The URL of the GCS bucket |
-| `bucket_self_link` | The self link of the GCS bucket resource |
-| `bucket_storage_class` | The storage class of the GCS bucket |
-| `bucket_force_destroy` | Whether force_destroy is enabled |
+| --- | --- |
+| `instance_id` | The ID of the Cloud SQL database instance |
+| `instance_name` | The name of the Cloud SQL database instance |
+| `instance_project` | The project ID where the instance is created |
+| `instance_location` | The region of the Cloud SQL database instance |
+| `instance_url` | The connection URL of the instance |
+| `instance_self_link` | The self link of the Cloud SQL database instance resource |
+| `instance_storage_class` | The storage class of the instance |
+| `instance_force_destroy` | Whether force_destroy is enabled |
 
 ## CI / Workload Identity Federation Setup
 
@@ -62,10 +67,10 @@ The Terratest job authenticates to GCP via [Workload Identity Federation](https:
 
 ```bash
 gcloud iam service-accounts add-iam-policy-binding \
-    "sa-17-cloud-storage@prj-17-cloud-storage-16748.iam.gserviceaccount.com" \
-    --project="prj-17-cloud-storage-16748" \
+    "sa-10-cloud-sql@prj-10-cloud-sql-16748.iam.gserviceaccount.com" \
+    --project="prj-10-cloud-sql-16748" \
     --role="roles/iam.workloadIdentityUser" \
-    --member="principalSet://iam.googleapis.com/projects/578842011545/locations/global/workloadIdentityPools/github-actions/attribute.repository/subhamay-bhattacharyya-tf/terraform-google-module-template"
+    --member="principalSet://iam.googleapis.com/projects/578842011545/locations/global/workloadIdentityPools/github-actions/attribute.repository/subhamay-bhattacharyya-tf/terraform-google-cloud-sql-instance"
 ```
 
 The three repository variables required by the CI workflow are:
