@@ -1,6 +1,6 @@
-# -- examples/bucket/basic/versions.tf (Example)
+# -- examples/cloud-sql/basic/versions.tf (Example)
 # ============================================================================
-# Example: Basic GCS Bucket - Version Requirements
+# Example: Basic Cloud SQL Database Instance - Version Requirements
 # ============================================================================
 
 terraform {
@@ -15,6 +15,5 @@ terraform {
 }
 
 provider "google" {
-  project = var.project_id
-  region  = var.region
+  region = var.region
 }

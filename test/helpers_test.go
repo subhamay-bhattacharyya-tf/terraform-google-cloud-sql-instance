@@ -1,4 +1,3 @@
-// File: test/helpers_test.go
 package test
 
 import (
@@ -7,9 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"cloud.google.com/go/storage"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/api/iterator"
+	sqladmin "google.golang.org/api/sqladmin/v1"
 )
 
 // mustEnv retrieves a required environment variable, failing the test if absent.
@@ -20,49 +18,26 @@ func mustEnv(t *testing.T, key string) string {
 	return v
 }
 
-// newGCSClient creates an authenticated GCS client.
-func newGCSClient(t *testing.T) *storage.Client {
+// newSQLAdminService creates an authenticated Cloud SQL Admin API service.
+func newSQLAdminService(t *testing.T) *sqladmin.Service {
 	t.Helper()
 	ctx := context.Background()
-	client, err := storage.NewClient(ctx)
-	require.NoError(t, err, "Failed to create GCS client")
-	return client
+	svc, err := sqladmin.NewService(ctx)
+	require.NoError(t, err, "Failed to create Cloud SQL Admin service")
+	return svc
 }
 
-// bucketExists reports whether the named bucket is accessible.
-func bucketExists(t *testing.T, client *storage.Client, bucketName string) bool {
+// instanceExists reports whether the named Cloud SQL instance exists in the given project.
+func instanceExists(t *testing.T, svc *sqladmin.Service, projectID, instanceName string) bool {
 	t.Helper()
-	ctx := context.Background()
-	_, err := client.Bucket(bucketName).Attrs(ctx)
+	_, err := svc.Instances.Get(projectID, instanceName).Do()
 	return err == nil
 }
 
-// fetchBucketAttrs returns the GCS BucketAttrs for the named bucket.
-func fetchBucketAttrs(t *testing.T, client *storage.Client, bucketName string) *storage.BucketAttrs {
+// fetchInstanceAttrs returns the DatabaseInstance resource for the named instance.
+func fetchInstanceAttrs(t *testing.T, svc *sqladmin.Service, projectID, instanceName string) *sqladmin.DatabaseInstance {
 	t.Helper()
-	ctx := context.Background()
-	attrs, err := client.Bucket(bucketName).Attrs(ctx)
-	require.NoError(t, err, "Failed to get bucket attributes for %s", bucketName)
-	return attrs
-}
-
-// listBucketObjects returns the object keys in the named bucket.
-func listBucketObjects(t *testing.T, client *storage.Client, bucketName string) []string {
-	t.Helper()
-	ctx := context.Background()
-	var keys []string
-	it := client.Bucket(bucketName).Objects(ctx, nil)
-	for {
-		obj, err := it.Next()
-		if err == iterator.Done {
-			break
-		}
-		require.NoError(t, err, "Failed to list objects in bucket %s", bucketName)
-		keys = append(keys, obj.Name)
-	}
-	return keys
-}
-
-func stringPtr(s string) *string {
-	return &s
+	instance, err := svc.Instances.Get(projectID, instanceName).Do()
+	require.NoError(t, err, "Failed to get Cloud SQL instance %s", instanceName)
+	return instance
 }

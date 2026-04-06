@@ -1,23 +1,26 @@
 # ============================================================================
-# GCS Bucket Module - Main
-# Creates and manages a Google Cloud Storage bucket.
+# Cloud SQL Database Instance - Main
+# Creates and manages a Google Cloud SQL database instance.
 # ============================================================================
 
-resource "google_storage_bucket" "this" {
-  name                        = var.bucket_name
-  project                     = var.project_id
-  location                    = var.location
-  storage_class               = upper(var.storage_class)
-  force_destroy               = var.force_destroy
-  uniform_bucket_level_access = true
-  public_access_prevention    = "enforced"
+resource "google_sql_database_instance" "this" {
+  name             = local.instance_name
+  project          = var.project_code
+  region           = var.cloud_sql_database_instance_config.location
+  database_version = var.cloud_sql_database_instance_config.database_version
 
-  labels = merge(var.labels, {
-    project     = var.project
-    environment = var.environment
-  })
+  deletion_protection = var.cloud_sql_database_instance_config.deletion_protection
 
-  versioning {
-    enabled = var.versioning
+  settings {
+    tier              = var.cloud_sql_database_instance_config.tier
+    availability_type = var.cloud_sql_database_instance_config.availability_type
+    disk_size         = var.cloud_sql_database_instance_config.disk_size
+    disk_type         = var.cloud_sql_database_instance_config.disk_type
+
+    user_labels = {
+      environment  = var.environment
+      project_code = var.project_code
+      managed-by   = "terraform"
+    }
   }
 }

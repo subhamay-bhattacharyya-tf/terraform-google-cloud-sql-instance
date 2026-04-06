@@ -29,20 +29,17 @@ meaningful feature combination.
 
 ## Step 1 — Enumerate Axes
 
-For each optional field in the root `cloud_sql_database_instance_config` object (or equivalent), record:
+For each optional field in the root `cloud_sql_database_instance_config` object, record:
 
 | Axis | Values |
 |---|---|
-| `storage_class` | `STANDARD`, `NEARLINE`, `COLDLINE`, `ARCHIVE`, `MULTI_REGIONAL`, `REGIONAL` |
-| `location` | `US`, `US-CENTRAL1`, `US-EAST1`, `US-EAST4`, `NAM4` |
-| `versioning.enabled` | `true`, `false` |
-| `lifecycle_rule` | absent, delete-after-age, transition-to-nearline, transition-to-coldline, transition-to-archive, abort-incomplete-multipart |
-| `cors` | absent, single-origin, multi-origin |
-| `website` | absent, present |
-| `autoclass` | absent, enabled-standard-terminal, enabled-nearline-terminal |
-| `kms_key_name` | absent, present (placeholder value) |
-| `force_destroy` | `true`, `false` |
-| `labels` | absent, present |
+| `database_version` | `MYSQL_8_0`, `POSTGRES_15`, `POSTGRES_14`, `SQLSERVER_2019_STANDARD` |
+| `location` | `us-central1`, `us-east1`, `us-east4`, `europe-west1` |
+| `tier` | `db-f1-micro`, `db-g1-small`, `db-n1-standard-2`, `db-n1-standard-4` |
+| `disk_type` | `PD_SSD`, `PD_HDD` |
+| `availability_type` | `ZONAL`, `REGIONAL` |
+| `disk_size` | `10`, `50`, `100` |
+| `deletion_protection` | `true`, `false` |
 
 ---
 
@@ -54,19 +51,13 @@ examples, each exercising a distinct capability or realistic deployment pattern:
 | Directory | Purpose | Key axes exercised |
 |---|---|---|
 | `basic/` | Minimal required fields only | defaults everywhere |
-| `storage-nearline/` | Nearline cold storage | `storage_class=NEARLINE`, lifecycle delete after 90d |
-| `storage-coldline/` | Coldline archival | `storage_class=COLDLINE`, lifecycle delete after 365d |
-| `storage-archive/` | Deep archive | `storage_class=ARCHIVE` |
-| `with-versioning/` | Object versioning on | `versioning.enabled=true`, lifecycle abort-incomplete-multipart |
-| `with-versioning-disabled/` | Versioning explicitly off | `versioning.enabled=false` |
-| `with-lifecycle-transition/` | Auto-tier via lifecycle | STANDARD → NEARLINE → COLDLINE transitions |
-| `with-cors/` | CORS for web use | `cors` single origin, `website` present |
-| `with-website/` | Static website hosting | `website` main/404, `cors` multi-origin |
-| `with-autoclass/` | Autoclass cost optimisation | `autoclass.enabled=true`, terminal=NEARLINE |
-| `with-kms/` | CMEK encryption | `kms_key_name` placeholder |
-| `with-labels/` | Resource labelling | `labels` map with env/team/cost-centre |
-| `no-force-destroy/` | Deletion protection | `force_destroy=false` |
-| `complete/` | All features on | versioning, lifecycle, cors, website, autoclass, kms, labels |
+| `mysql/` | MySQL 8.0 instance | `database_version=MYSQL_8_0`, `tier=db-n1-standard-2` |
+| `postgres/` | PostgreSQL 15 instance | `database_version=POSTGRES_15`, `tier=db-n1-standard-2` |
+| `sqlserver/` | SQL Server 2019 Standard | `database_version=SQLSERVER_2019_STANDARD` |
+| `high-availability/` | Regional HA setup | `availability_type=REGIONAL`, `tier=db-n1-standard-4` |
+| `with-hdd/` | HDD disk for cost savings | `disk_type=PD_HDD`, `disk_size=100` |
+| `with-deletion-protection/` | Production guard | `deletion_protection=true` |
+| `complete/` | All options specified | HA, large disk, deletion protection, custom tier |
 
 ---
 

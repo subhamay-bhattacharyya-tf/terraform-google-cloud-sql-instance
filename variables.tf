@@ -1,16 +1,25 @@
 # ============================================================================
-# GCS Bucket - Variables
+# Cloud SQL Database Instance - Variables
 # ============================================================================
 
-variable "bucket_name" {
-  description = "Name of the GCS bucket."
+variable "environment" {
+  description = "Deployment environment. One of: devl, test, prod."
   type        = string
+
+  validation {
+    condition     = contains(["devl", "test", "prod"], var.environment)
+    error_message = "environment must be one of: devl, test, prod."
+  }
 }
 
-variable "project_id" {
-  description = "GCP project ID."
+variable "project_code" {
+  description = "Short identifier used in resource naming standardization."
   type        = string
-  default     = "portfolio-site"
+
+  validation {
+    condition     = length(var.project_code) > 0
+    error_message = "project_code must not be empty."
+  }
 }
 
 variable "region" {
@@ -19,44 +28,36 @@ variable "region" {
   default     = "us-central1"
 }
 
-variable "location" {
-  description = "GCS bucket location."
-  type        = string
-  default     = "US"
-}
+variable "cloud_sql_database_instance_config" {
+  description = "Configuration object for the Cloud SQL database instance."
+  type = object({
+    base_name           = string
+    location            = optional(string, "us-central1")
+    database_version    = optional(string, "MYSQL_8_0")
+    tier                = optional(string, "db-f1-micro")
+    disk_size           = optional(number, 10)
+    disk_type           = optional(string, "PD_SSD")
+    availability_type   = optional(string, "ZONAL")
+    deletion_protection = optional(bool, false)
+  })
 
-variable "storage_class" {
-  description = "Storage class for the bucket."
-  type        = string
-  default     = "STANDARD"
-}
+  validation {
+    condition     = length(var.cloud_sql_database_instance_config.base_name) > 0 && length(var.cloud_sql_database_instance_config.base_name) <= 30
+    error_message = "base_name must be non-empty and at most 30 characters."
+  }
 
-variable "force_destroy" {
-  description = "Whether to force-destroy the bucket on Terraform destroy."
-  type        = bool
-  default     = false
-}
+  validation {
+    condition     = can(regex("^[a-z0-9-]+$", var.cloud_sql_database_instance_config.base_name))
+    error_message = "base_name must contain only lowercase alphanumeric characters and dashes."
+  }
 
-variable "versioning" {
-  description = "Whether to enable object versioning."
-  type        = bool
-  default     = false
-}
+  validation {
+    condition     = contains(["PD_SSD", "PD_HDD"], var.cloud_sql_database_instance_config.disk_type)
+    error_message = "disk_type must be one of: PD_SSD, PD_HDD."
+  }
 
-variable "labels" {
-  description = "Additional labels to apply to the bucket."
-  type        = map(string)
-  default     = {}
-}
-
-variable "project" {
-  description = "Project label value."
-  type        = string
-  default     = "portfolio-site"
-}
-
-variable "environment" {
-  description = "Environment label value."
-  type        = string
-  default     = "dev"
+  validation {
+    condition     = contains(["ZONAL", "REGIONAL"], var.cloud_sql_database_instance_config.availability_type)
+    error_message = "availability_type must be one of: ZONAL, REGIONAL."
+  }
 }

@@ -16,7 +16,7 @@ terraform fmt -check -recursive
 terraform init -backend=false && terraform validate
 
 # Validate the example
-cd examples/bucket/basic && terraform init -backend=false && terraform validate
+cd examples/cloud-sql/basic && terraform init -backend=false && terraform validate
 
 # Run Terratest integration test (requires GCP auth + GOOGLE_CLOUD_PROJECT env var)
 cd test && go test -v -timeout 30m -run TestGCSBucketBasic ./gcs_bucket_basic_test.go ./helpers_test.go
@@ -60,7 +60,7 @@ The module uses a single structured `cloud_sql_database_instance_config` object 
 Runs on pushes/PRs to `main`, `feature/**`, `bug/**` when `.tf`, `examples/**`, or `test/**` files change:
 
 1. **terraform-validate** — `fmt -check`, `init`, `validate` on the root module
-2. **examples-validate** — `init` + `validate` on `examples/bucket/basic` (needs step 1)
+2. **examples-validate** — `init` + `validate` on `examples/cloud-sql/basic` (needs step 1)
 3. **terratest** — real GCP integration test via Workload Identity Federation (needs step 2); requires `GCP_PROJECT_ID`, `GCP_WORKLOAD_IDENTITY_PROVIDER`, `GCP_SERVICE_ACCOUNT` repo vars
 4. **generate-changelog** — runs `git-cliff` on non-main branches (needs step 2)
 5. **semantic-release** — runs only on `main` after steps 2 and 3; uses Conventional Commits to auto-version

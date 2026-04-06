@@ -356,78 +356,58 @@ resource "aws_s3_bucket_replication_configuration" "this" {
 
 ## GCP
 
-### GCS Bucket Module — Annotated Example
+### Cloud SQL Database Instance Module — Annotated Example
 
 ```hcl
 # -----------------------------------------------------------------------------
-# modules/gcs-bucket/main.tf
+# modules/cloud-sql/main.tf
 # -----------------------------------------------------------------------------
 
-# Look up existing KMS key ring if CMEK is enabled
-data "google_kms_key_ring" "this" {
-  count    = var.bucket_config.kms_key_ring != null ? 1 : 0
-  name     = var.bucket_config.kms_key_ring
-  location = var.bucket_config.location
-  project  = var.bucket_config.project_id
+locals {
+  instance_name = "${var.project_code}-${var.cloud_sql_database_instance_config.base_name}-${var.cloud_sql_database_instance_config.location}-${var.environment}"
 }
 
-data "google_kms_crypto_key" "this" {
-  count    = var.bucket_config.kms_crypto_key != null ? 1 : 0
-  name     = var.bucket_config.kms_crypto_key
-  key_ring = data.google_kms_key_ring.this[0].id
-}
+resource "google_sql_database_instance" "this" {
+  name             = local.instance_name
+  project          = var.project_code
+  region           = var.cloud_sql_database_instance_config.location
+  database_version = var.cloud_sql_database_instance_config.database_version
 
-# Core bucket resource
-resource "google_storage_bucket" "this" {
-  name                        = var.bucket_config.name
-  project                     = var.bucket_config.project_id
-  location                    = var.bucket_config.location
-  storage_class               = var.bucket_config.storage_class
-  uniform_bucket_level_access = var.bucket_config.uniform_bucket_level_access
-  force_destroy               = var.bucket_config.force_destroy
-  labels                      = var.bucket_config.labels
+  deletion_protection = var.cloud_sql_database_instance_config.deletion_protection
 
-  versioning {
-    enabled = var.bucket_config.versioning_enabled
-  }
+  settings {
+    tier              = var.cloud_sql_database_instance_config.tier
+    availability_type = var.cloud_sql_database_instance_config.availability_type
+    disk_size         = var.cloud_sql_database_instance_config.disk_size
+    disk_type         = var.cloud_sql_database_instance_config.disk_type
 
-  # CMEK encryption — only applied when kms_crypto_key is provided
-  dynamic "encryption" {
-    for_each = var.bucket_config.kms_crypto_key != null ? [1] : []
-    content {
-      default_kms_key_name = data.google_kms_crypto_key.this[0].id
+    user_labels = {
+      environment  = var.environment
+      project_code = var.project_code
+      managed-by   = "terraform"
     }
   }
-
-  # Retention policy — only applied when retention_period_seconds is set
-  dynamic "retention_policy" {
-    for_each = var.bucket_config.retention_period_seconds != null ? [1] : []
-    content {
-      retention_period = var.bucket_config.retention_period_seconds
-    }
-  }
-}
-
-# IAM bindings — one per entry in iam_bindings list
-resource "google_storage_bucket_iam_member" "this" {
-  for_each = {
-    for binding in var.bucket_config.iam_bindings :
-    "${binding.role}/${binding.member}" => binding
-  }
-  bucket = google_storage_bucket.this.name
-  role   = each.value.role
-  member = each.value.member
 }
 ```
 
-### GCS Storage Classes
+### Cloud SQL Database Versions
 
-| Class | Use Case | Min Storage Duration |
+| Version | Engine |
+|---|---|
+| `MYSQL_8_0` | MySQL 8.0 |
+| `POSTGRES_15` | PostgreSQL 15 |
+| `POSTGRES_14` | PostgreSQL 14 |
+| `SQLSERVER_2019_STANDARD` | SQL Server 2019 Standard |
+| `SQLSERVER_2019_ENTERPRISE` | SQL Server 2019 Enterprise |
+
+### Cloud SQL Tier Examples
+
+| Tier | vCPUs | Memory |
 |---|---|---|
-| `STANDARD` | Frequent access | None |
-| `NEARLINE` | Access < once/month | 30 days |
-| `COLDLINE` | Access < once/quarter | 90 days |
-| `ARCHIVE` | Access < once/year | 365 days |
+| `db-f1-micro` | Shared | 0.6 GB |
+| `db-g1-small` | Shared | 1.7 GB |
+| `db-n1-standard-2` | 2 | 7.5 GB |
+| `db-n1-standard-4` | 4 | 15 GB |
 
 ---
 

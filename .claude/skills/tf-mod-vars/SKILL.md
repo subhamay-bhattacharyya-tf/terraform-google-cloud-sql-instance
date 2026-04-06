@@ -266,51 +266,58 @@ module "s3_buckets" {
 | `subnetwork` | `string` | Subnet name or self-link |
 | `service_account_email` | `string` | Format: `name@project.iam.gserviceaccount.com` |
 
-### Example: GCS Bucket Module
+### Example: Cloud SQL Database Instance Module
 
 ```hcl
-variable "bucket_configs" {
-  description = "Map of GCS bucket configurations."
-  type = map(object({
-    name                        = string
-    project_id                  = string
-    location                    = optional(string, "US")
-    storage_class               = optional(string, "STANDARD")
-    uniform_bucket_level_access = optional(bool, true)
-    versioning_enabled          = optional(bool, false)
-    retention_period_seconds    = optional(number, null)
-    labels                      = optional(map(string), {})
-  }))
-  default = {}
+variable "cloud_sql_database_instance_config" {
+  description = "Configuration object for the Cloud SQL database instance."
+  type = object({
+    base_name           = string
+    location            = optional(string, "us-central1")
+    database_version    = optional(string, "MYSQL_8_0")
+    tier                = optional(string, "db-f1-micro")
+    disk_size           = optional(number, 10)
+    disk_type           = optional(string, "PD_SSD")
+    availability_type   = optional(string, "ZONAL")
+    deletion_protection = optional(bool, false)
+  })
 
   validation {
-    condition = alltrue([
-      for k, v in var.bucket_configs :
-      contains(["STANDARD", "NEARLINE", "COLDLINE", "ARCHIVE"], v.storage_class)
-    ])
-    error_message = "storage_class must be one of: STANDARD, NEARLINE, COLDLINE, ARCHIVE."
+    condition     = length(var.cloud_sql_database_instance_config.base_name) > 0 && length(var.cloud_sql_database_instance_config.base_name) <= 30
+    error_message = "base_name must be non-empty and at most 30 characters."
+  }
+
+  validation {
+    condition     = can(regex("^[a-z0-9-]+$", var.cloud_sql_database_instance_config.base_name))
+    error_message = "base_name must contain only lowercase alphanumeric characters and dashes."
+  }
+
+  validation {
+    condition     = contains(["PD_SSD", "PD_HDD"], var.cloud_sql_database_instance_config.disk_type)
+    error_message = "disk_type must be one of: PD_SSD, PD_HDD."
+  }
+
+  validation {
+    condition     = contains(["ZONAL", "REGIONAL"], var.cloud_sql_database_instance_config.availability_type)
+    error_message = "availability_type must be one of: ZONAL, REGIONAL."
   }
 }
 ```
 
 ```hcl
-module "gcs_buckets" {
-  source = "./modules/gcs"
+module "cloud_sql_database_instance" {
+  source = "./modules/cloud-sql"
 
-  bucket_configs = {
-    raw_data = {
-      name          = "my-project-raw-data"
-      project_id    = "my-gcp-project-123"
-      location      = "US"
-      storage_class = "STANDARD"
-      labels        = { env = "prod", team = "data" }
-    }
-    archive = {
-      name          = "my-project-archive"
-      project_id    = "my-gcp-project-123"
-      storage_class = "COLDLINE"
-      location      = "EU"
-    }
+  environment  = "prod"
+  project_code = "demo"
+  region       = "us-central1"
+
+  cloud_sql_database_instance_config = {
+    base_name         = "my-sql-instance"
+    location          = "us-central1"
+    database_version  = "POSTGRES_15"
+    tier              = "db-n1-standard-2"
+    availability_type = "REGIONAL"
   }
 }
 ```
