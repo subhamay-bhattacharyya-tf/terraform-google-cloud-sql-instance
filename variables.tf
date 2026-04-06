@@ -22,6 +22,16 @@ variable "project_code" {
   }
 }
 
+variable "project_id" {
+  description = "The GCP project ID where the Cloud SQL instance will be created."
+  type        = string
+
+  validation {
+    condition     = length(var.project_id) > 0
+    error_message = "project_id must not be empty."
+  }
+}
+
 variable "region" {
   description = "GCP region."
   type        = string

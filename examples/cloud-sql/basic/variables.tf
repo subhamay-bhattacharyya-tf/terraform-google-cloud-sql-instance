@@ -15,6 +15,11 @@ variable "project_code" {
   default     = "demo"
 }
 
+variable "project_id" {
+  description = "The GCP project ID where the Cloud SQL instance will be created."
+  type        = string
+}
+
 variable "region" {
   description = "GCP region."
   type        = string

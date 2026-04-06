@@ -8,6 +8,7 @@ module "cloud_sql_database_instance" {
 
   environment  = var.environment
   project_code = var.project_code
+  project_id   = var.project_id
   region       = var.region
 
   cloud_sql_database_instance_config = {

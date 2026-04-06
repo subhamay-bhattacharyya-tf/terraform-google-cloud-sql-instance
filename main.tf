@@ -5,7 +5,7 @@
 
 resource "google_sql_database_instance" "this" {
   name             = local.instance_name
-  project          = var.project_code
+  project          = var.project_id
   region           = var.cloud_sql_database_instance_config.location
   database_version = var.cloud_sql_database_instance_config.database_version
 

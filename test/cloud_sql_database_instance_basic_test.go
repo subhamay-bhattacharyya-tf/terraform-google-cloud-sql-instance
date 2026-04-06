@@ -26,6 +26,7 @@ func TestCloudSQLDatabaseInstanceBasic(t *testing.T) {
 		Vars: map[string]interface{}{
 			"environment":  "devl",
 			"project_code": "demo",
+			"project_id":   projectID,
 			"region":       "us-central1",
 			"cloud_sql_database_instance_config": map[string]interface{}{
 				"base_name": baseName,
