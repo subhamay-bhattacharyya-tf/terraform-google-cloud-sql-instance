@@ -49,4 +49,4 @@ node_modules/
 
 ## Ignore log files
 gh-log.txt
-.DS_Store
+.DS_Store it will pull it. Will code.
